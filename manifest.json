@@ -1,7 +1,7 @@
 {
   "name": "정도 수련비 관리",
   "short_name": "수련비",
-  "id": "./?app=tuition",
+  "id": "./?app=tuition-2",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
