@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script src="https://yujongho0714.github.io/cloud/jd-cloud.js" data-app="tuition" data-keys="tuition-"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>정도2관 수련비 관리</title>
+<style>
+  :root{
+    --bg:#0e0f14; --panel:#171922; --panel-soft:#1e2030; --ink:#f2f3f7; --sub:#9aa0b4;
+    --line:#2a2d3d; --accent:#ffd400; --ok:#3ddc84; --danger:#ff5a6e; --blue:#4d90fe;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Malgun Gothic',sans-serif;}
+  .wrap{max-width:760px;margin:0 auto;padding:16px 14px 110px;}
+  h1{font-size:19px;margin:6px 0 2px;}
+  h2{font-size:15px;margin:0 0 8px;}
+  .sub{font-size:12.5px;color:var(--sub);margin-bottom:14px;line-height:1.5;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:10px;}
+  input[type="text"],input[type="number"],input[type="date"],input[type="search"],select,textarea{
+    width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-soft);color:var(--ink);font-size:14px;font-family:inherit;
+  }
+  label{display:block;font-size:11.5px;color:var(--sub);margin-bottom:4px;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:90px;}
+  .btn{
+    padding:10px 14px;border-radius:10px;border:none;font-weight:800;font-size:13px;
+    cursor:pointer;color:#111;background:var(--accent);
+  }
+  .btn.ghost{ background:transparent;border:1px solid var(--line);color:var(--ink); }
+  .btn.ok{ background:var(--ok); }
+  .btn.danger{ background:var(--danger);color:#fff; }
+  .btn.small{ padding:6px 10px;font-size:12px; }
+  .btn.blue{ background:var(--blue);color:#fff; }
+  .btn:disabled{opacity:.4;cursor:default;}
+  .toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;}
+  .badge.warn{background:rgba(255,90,110,0.18);color:var(--danger);}
+  .badge.ok{background:rgba(61,220,132,0.16);color:var(--ok);}
+  .badge.sib{background:rgba(77,144,254,0.18);color:var(--blue);}
+  .badge.demo{background:rgba(255,212,0,0.18);color:var(--accent);}
+  .empty-state{text-align:center;color:var(--sub);font-size:13px;padding:26px 10px;}
+  .toast{
+    position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+    background:#222;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:30;white-space:nowrap;max-width:90%;text-align:center;
+  }
+  .toast.show{opacity:1;}
+  .tabbar{ display:flex; gap:6px; margin-bottom:12px; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:4px; overflow-x:auto; }
+  .tab-btn{ flex:1; white-space:nowrap; padding:9px 8px; border-radius:9px; border:none; background:transparent;
+    color:var(--sub); font-weight:800; font-size:12px; cursor:pointer; }
+  .tab-btn.active{ background:var(--accent); color:#111; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+  .stu-row{ background:var(--panel);border:1px solid var(--line);border-radius:12px; padding:11px 12px;margin-bottom:8px; }
+  .stu-row.review{ border-color:rgba(255,90,110,0.6); }
+  .stu-top{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .stu-name{ font-size:15px; font-weight:800; }
+  .stu-sub{ font-size:11.5px; color:var(--sub); }
+  .stu-details{ margin-top:8px; display:none; }
+  .stu-row.open .stu-details{ display:block; }
+  .chev{ margin-left:auto; color:var(--sub); font-size:12px; }
+  .field{margin-bottom:8px;}
+  .month-table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  .month-table th, .month-table td{ border-bottom:1px solid var(--line); padding:7px 4px; text-align:center; }
+  .month-table th{ color:var(--sub); font-weight:700; font-size:11px; }
+  .month-table td input, .month-table td select{ padding:5px 4px; font-size:12px; border-radius:6px; }
+  .month-table tr.unpaid td{ background:rgba(255,90,110,0.08); }
+  .search-box{margin-bottom:10px;}
+  .group-card{ border-left:3px solid var(--blue); }
+  .group-members{ font-size:12.5px; color:var(--sub); margin:4px 0 8px; }
+  .summary{ font-size:12.5px; color:var(--sub); margin-bottom:10px; display:flex; gap:12px; flex-wrap:wrap; }
+  .summary b{ color:var(--accent); }
+  .filter-chips{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .chip{ padding:6px 11px; border-radius:999px; border:1px solid var(--line); background:var(--panel-soft);
+    color:var(--sub); font-size:12px; font-weight:700; cursor:pointer; }
+  .chip.active{ border-color:var(--accent); color:var(--accent); background:rgba(255,212,0,0.1); }
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffffff">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="수련비">
+<style id="jd-app-css">
+#jd-splash{position:fixed;inset:0;z-index:2147483646;background:#ffffff;display:flex;align-items:center;justify-content:center;transition:opacity .5s ease-out,visibility .5s}
+#jd-splash img{width:min(44vw,210px);height:auto;border-radius:22%;box-shadow:0 10px 30px rgba(0,0,0,.18);animation:jdPop .6s cubic-bezier(.2,1.2,.4,1) both}
+#jd-splash.out{opacity:0;visibility:hidden}
+@keyframes jdPop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+#jd-install{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147482999;display:flex;align-items:center;gap:8px;background:#111216;color:#fff;border-radius:999px;padding:6px 6px 6px 14px;font:700 13px 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#jd-install button{border:0;border-radius:999px;padding:8px 12px;font:700 13px 'Noto Sans KR',sans-serif;cursor:pointer}
+#jd-install .go{background:#d7262b;color:#fff}#jd-install .x{background:#2c2e36;color:#fff}
+@media (prefers-reduced-motion: reduce){#jd-splash img{animation:none}#jd-splash{transition:none}}
+</style>
+<script>
+(function(){
+  var t0=Date.now();
+  function hide(){ var s=document.getElementById("jd-splash"); if(!s||s.classList.contains("out")) return; s.classList.add("out"); setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); },700); }
+  window.addEventListener("load",function(){ setTimeout(hide,Math.max(0,750-(Date.now()-t0))); });
+  setTimeout(hide,4000);
+  if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
+  var KEY="jd-install-off-tuition", dp=null;
+  var standalone=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
+  window.addEventListener("beforeinstallprompt",function(e){
+    e.preventDefault(); dp=e; if(standalone) return; try{ if(localStorage.getItem(KEY)) return; }catch(_){}
+    if(document.getElementById("jd-install")) return;
+    var b=document.createElement("div"); b.id="jd-install"; b.innerHTML="<span>홈 화면에 앱으로 설치</span><button class='go' type='button'>설치</button><button class='x' type='button' aria-label='닫기'>닫기</button>";
+    b.querySelector(".go").onclick=function(){ dp.prompt(); dp.userChoice.then(function(){ b.remove(); }); };
+    b.querySelector(".x").onclick=function(){ b.remove(); try{ localStorage.setItem(KEY,"1"); }catch(_){} };
+    document.body.appendChild(b);
+  });
+  window.addEventListener("appinstalled",function(){ var b=document.getElementById("jd-install"); if(b) b.remove(); });
+
+})();
+</script>
+</head>
+<body>
+<div id="jd-splash" aria-hidden="true"><img src="icon-512.png" alt=""></div>
+<div class="wrap">
+  <h1>정도2관 수련비 관리</h1>
+  <div class="sub" id="topSub">원생 확인부터 시작하세요.</div>
+
+  <div class="tabbar">
+    <button class="tab-btn active" data-tab="review" onclick="switchTab('review')">원생확인</button>
+    <button class="tab-btn" data-tab="month" onclick="switchTab('month')">납부현황</button>
+    <button class="tab-btn" data-tab="unpaid" onclick="switchTab('unpaid')">미납확인</button>
+    <button class="tab-btn" data-tab="sibling" onclick="switchTab('sibling')">형제관리</button>
+    <button class="tab-btn" data-tab="absence" onclick="switchTab('absence')">결석차감</button>
+  </div>
+
+  <div id="panel-review" class="tab-panel active"></div>
+  <div id="panel-month" class="tab-panel"></div>
+  <div id="panel-unpaid" class="tab-panel"></div>
+  <div id="panel-sibling" class="tab-panel"></div>
+  <div id="panel-absence" class="tab-panel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED_STUDENTS = [
+ {id:"st1",name:"강시우",grade:"3학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-8988-3106",days:null,weekday:null,paydate:"2026-09-16",method:"카",amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st2",name:"곽리온",grade:"5학년",fatherName:"곽영규",fatherPhone:"010-8779-3160",motherName:"정안나",motherPhone:"010-3007-5367",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:"곽리온 곽시연 곽아인 형제",sibGroup:"sib1",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st3",name:"곽소이",grade:"4학년",fatherName:"곽만규",fatherPhone:"010-3023-9122",motherName:"이지영",motherPhone:"010-9190-5728",days:"주5회",weekday:"월화수목금",paydate:"2026-09-17",method:"카",amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st4",name:"곽시연",grade:"3학년",fatherName:"곽영규",fatherPhone:"010-8779-3160",motherName:"정안나",motherPhone:"010-3007-5367",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib1",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st5",name:"곽아인",grade:"중학생",fatherName:"곽영규",fatherPhone:"010-8779-3160",motherName:"정안나",motherPhone:"010-3007-5367",days:"주5",weekday:"시범단",paydate:null,method:null,amount:null,note:null,sibGroup:"sib1",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st6",name:"권자윤",grade:"6학년",fatherName:"권영혁",fatherPhone:"010-2027-1775",motherName:"정여섭희",motherPhone:"010-5911-7471",days:"주5회",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:"형제",sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"형제 관계 확인필요"},
+ {id:"st7",name:"김나연",grade:"1학년",fatherName:"김대성",fatherPhone:"010-4587-9146",motherName:"한재옥",motherPhone:"010-3000-2308",days:"주3회",weekday:"주3회",paydate:"2026-09-09",method:"카",amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st8",name:"김나윤",grade:"2학년",fatherName:"김병섭",fatherPhone:"010-4023-9715",motherName:"최유림",motherPhone:"010-5263-6857",days:"주3",weekday:"주5회",paydate:"2026-09-02",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st9",name:"김도아",grade:"유치부",fatherName:"",fatherPhone:"010-3798-7196",motherName:"",motherPhone:"",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:160000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st10",name:"김동준",grade:"4학년",fatherName:"김양수",fatherPhone:"010-2008-7422",motherName:"정정화",motherPhone:"010-2651-3364",days:null,weekday:null,paydate:"2026-09-01",method:null,amount:335000,note:null,sibGroup:"sib2",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st11",name:"김동현",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-2651-3364",days:"주5회",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib2",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st12",name:"김민성",grade:"3학년",fatherName:"김영식",fatherPhone:"010-9964-8079",motherName:"오선아",motherPhone:"010-9024-3052",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st13",name:"김서율",grade:"3학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"",days:null,weekday:null,paydate:"2026-09-09",method:null,amount:280000,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"형제 관계 확인필요"},
+ {id:"st14",name:"김서중",grade:"5학년",fatherName:"",fatherPhone:"010-2609-9388",motherName:"",motherPhone:"010-7372-9388",days:"주5",weekday:"월화수목금",paydate:"9월",method:"카",amount:270000,note:null,sibGroup:"sib3",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st15",name:"김서진",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"형제 관계 확인필요"},
+ {id:"st16",name:"김시우",grade:"3학년",fatherName:"김성현",fatherPhone:"010-3113-6868",motherName:"한선희",motherPhone:"010-2722-6697",days:"주5회",weekday:null,paydate:null,method:"계",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"원생목록 대조 확인필요"},
+ {id:"st17",name:"김시우",grade:"유치부",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"",days:"주5회",weekday:null,paydate:null,method:"계",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"원생목록 대조 확인필요"},
+ {id:"st18",name:"김연중",grade:"3학년",fatherName:"",fatherPhone:"010-2609-9388",motherName:"",motherPhone:"010-7372-9388",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib3",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st19",name:"김오름",grade:"유치부",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-3088-2397",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:160000,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"원생목록 대조 확인필요"},
+ {id:"st20",name:"김온유",grade:"2학년",fatherName:"",fatherPhone:"010-9748-0416",motherName:"",motherPhone:"010-9504-4609",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st21",name:"김유찬",grade:"3학년",fatherName:"김선식",fatherPhone:"010-5437-9802",motherName:"김혜영",motherPhone:"010-9428-3306",days:"주5회",weekday:null,paydate:"2026-09-02",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st22",name:"김윤찬",grade:"1학년",fatherName:"",fatherPhone:"010-2363-1629",motherName:"",motherPhone:"",days:"주5회",weekday:null,paydate:"2026-09-08",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st23",name:"김이준",grade:"2학년",fatherName:"",fatherPhone:"010-5563-1589",motherName:"",motherPhone:"010-2468-6533",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:160000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st24",name:"김정현",grade:"2학년",fatherName:"김주훈",fatherPhone:"010-9111-9495",motherName:"권선아",motherPhone:"010-4704-2757",days:"주5",weekday:null,paydate:"2026-09-04",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st25",name:"김지오",grade:"5학년",fatherName:"김성용",fatherPhone:"010-6432-3196",motherName:"황현지",motherPhone:"010-2909-5025",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st26",name:"김지운",grade:"3학년",fatherName:"김영민",fatherPhone:"010-2473-3339",motherName:"김성미",motherPhone:"010-8443-0843",days:"주5회",weekday:"월화수목금",paydate:"2026-09-03",method:"카",amount:285000,note:"9월 10월",sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st27",name:"김하빈",grade:"6학년",fatherName:"김민석",fatherPhone:"010-4192-1426",motherName:"오성은",motherPhone:"010-3054-0930",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st28",name:"김해솔",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-3297-3016",days:null,weekday:null,paydate:"2026-09-11",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st29",name:"남광연",grade:"3학년",fatherName:"남윤걸",fatherPhone:"010-2281-9825",motherName:"유현화",motherPhone:"010-8839-5901",days:"주5회",weekday:"월화수목금",paydate:"2026-09-03",method:"카",amount:160000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st30",name:"류승우",grade:"4학년",fatherName:"류인성",fatherPhone:"010-5498-6689",motherName:"박미현",motherPhone:"010-4135-2918",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib4",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st31",name:"류시우",grade:"2학년",fatherName:"",fatherPhone:"010-4135-2918",motherName:"",motherPhone:"",days:"주5회",weekday:"월화수목금",paydate:"2026-09-17",method:"카",amount:335000,note:null,sibGroup:"sib4",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st32",name:"박건",grade:"3학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-9303-0329",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:310000,note:null,sibGroup:"sib5",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st33",name:"박서준",grade:"2학년",fatherName:"박상은",fatherPhone:"010-9069-6848",motherName:"최선희",motherPhone:"010-8900-5801",days:"주5",weekday:"월화수목금",paydate:"2026-09-01",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st34",name:"박소연",grade:"4학년",fatherName:"",fatherPhone:"",motherName:"김솔",motherPhone:"010-6430-4509",days:"주3",weekday:"월수금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib6",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st35",name:"박유민",grade:"2학년",fatherName:"",fatherPhone:"010-6430-4509",motherName:"",motherPhone:"",days:"주3회",weekday:"월수금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib6",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st36",name:"박윤",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-9303-0329",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:"sib5",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st37",name:"박하윤",grade:"2학년",fatherName:"박근영",fatherPhone:"010-8588-1410",motherName:"최경희",motherPhone:"010-4744-8721",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st38",name:"방서영",grade:"4학년",fatherName:"방재현",fatherPhone:"010-2946-2358",motherName:"전수현",motherPhone:"010-9957-0345",days:"주5회",weekday:"주5회",paydate:null,method:"완",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st39",name:"배도준",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-7705-1180",days:"주2회",weekday:"월금",paydate:null,method:"카+바",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st40",name:"배찬우",grade:"2학년",fatherName:"배성국",fatherPhone:"010-3697-3412",motherName:"박정영",motherPhone:"010-7513-0918",days:"주5",weekday:"월화수목금",paydate:"2026-09-04",method:null,amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st41",name:"상하윤",grade:"4학년",fatherName:"상경순",fatherPhone:"010-5404-1845",motherName:"정희라",motherPhone:"010-2470-9205",days:"주5",weekday:"월화수목금",paydate:"2026-09-02",method:null,amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st42",name:"서재윤",grade:"3학년",fatherName:"서정환",fatherPhone:"010-8484-8885",motherName:"정보라",motherPhone:"010-2329-2323",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"원생목록 대조 확인필요"},
+ {id:"st43",name:"송소은",grade:"2학년",fatherName:"송문석",fatherPhone:"010-4905-0927",motherName:"황지선",motherPhone:"010-7414-7930",days:"주3",weekday:"월화목",paydate:null,method:"카",amount:"7,8,9 완료",note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st44",name:"송우빈",grade:"4학년",fatherName:"송기찬",fatherPhone:"010-6325-1976",motherName:"우정미",motherPhone:"010-9425-3149",days:"주4",weekday:"월화수목금",paydate:"2026-09-04",method:null,amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st45",name:"송준호",grade:"4학년",fatherName:"",fatherPhone:"",motherName:"김아람",motherPhone:"010-8395-1226",days:"주5",weekday:"월화수목금",paydate:"2026-09-04",method:null,amount:190000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st46",name:"송지혁",grade:"6학년",fatherName:"송홍호",fatherPhone:"010-4366-4180",motherName:"이현주",motherPhone:"010-4248-4180",days:"주5",weekday:"월화수목금",paydate:"2026-09-01",method:"카",amount:175000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st47",name:"신서우",grade:"5학년",fatherName:"신근화",fatherPhone:"010-4872-3620",motherName:"장현정",motherPhone:"010-2687-4573",days:"주5",weekday:"월,화수,목금",paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st48",name:"신수호",grade:"3학년",fatherName:"신재인",fatherPhone:"010-8782-5500",motherName:"김선미",motherPhone:"010-6369-1577",days:"주5회",weekday:"주5회",paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st49",name:"신혜성",grade:"2학년",fatherName:"신상우",fatherPhone:"010-7130-8949",motherName:"이선화",motherPhone:"010-4606-6670",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:"시범단",sibGroup:null,isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st50",name:"양하온",grade:"6학년",fatherName:"",fatherPhone:"",motherName:"김언진",motherPhone:"010-3257-8245",days:"주5",weekday:"월화수목금",paydate:"2026-09-03",method:"카",amount:370000,note:"시범단",sibGroup:"sib7",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st51",name:"양하준",grade:"6학년",fatherName:"",fatherPhone:"",motherName:"김언진",motherPhone:"010-3257-8245",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:"시범단",sibGroup:"sib7",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st52",name:"엄태준",grade:"2학년",fatherName:"엄지용",fatherPhone:"010-9181-5092",motherName:"안송지",motherPhone:"010-8741-8238",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st53",name:"오지유",grade:"5학년",fatherName:"오진규",fatherPhone:"010-6486-6436",motherName:"이새롬",motherPhone:"010-5680-1033",days:"주5",weekday:"월화수목금",paydate:"2026-09-01",method:null,amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st54",name:"오하람",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-7118-7079",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:300000,note:null,sibGroup:"sib8",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st55",name:"오하율",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-7118-7079",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:"sib8",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st56",name:"오하진",grade:"2학년",fatherName:"",fatherPhone:"010-4650-9024",motherName:"",motherPhone:"",days:"주5",weekday:"월화수목금",paydate:"2026-09-09",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st57",name:"위연주",grade:"5학년",fatherName:"",fatherPhone:"",motherName:"구영일",motherPhone:"010-5159-1088",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st58",name:"유다현",grade:"1학년",fatherName:"유정민",fatherPhone:"010-9836-1023",motherName:"김세진",motherPhone:"010-4708-1651",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st59",name:"유이준",grade:"3학년",fatherName:"유승태",fatherPhone:"010-8857-3557",motherName:"송연수",motherPhone:"010-2662-8486",days:"주3",weekday:"화수목 ",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st60",name:"유정우",grade:"3학년",fatherName:"유재환",fatherPhone:"010-9500-5806",motherName:"주수현",motherPhone:"010-9057-2881",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st61",name:"유준혁",grade:"3학년",fatherName:"유태경",fatherPhone:"010-8574-8148",motherName:"정미애",motherPhone:"010-8905-8005",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st62",name:"육지호",grade:"4학년",fatherName:"육광수",fatherPhone:"010-3024-0306",motherName:"배솔지",motherPhone:"010-3940-2454",days:"주5",weekday:"월화수목금",paydate:null,method:null,amount:null,note:null,sibGroup:"sib9",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st63",name:"육지훈",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-3940-2454",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:null,sibGroup:"sib9",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st64",name:"윤서진",grade:"4학년",fatherName:"윤영로",fatherPhone:"010-2386-6041",motherName:"",motherPhone:"",days:"주5",weekday:"월화수목금",paydate:"2026-08-01",method:"카",amount:190000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st65",name:"이도훈",grade:"1학년",fatherName:"",fatherPhone:"",motherName:"최은희",motherPhone:"010-9226-4283",days:null,weekday:null,paydate:"2026-09-09",method:"계",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st66",name:"이동윤",grade:"4학년",fatherName:"이준희",fatherPhone:"010-4557-4500",motherName:"고은정",motherPhone:"010-4454-7923",days:"주3회",weekday:null,paydate:null,method:"계",amount:null,note:null,sibGroup:"sib10",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st67",name:"이동율",grade:"2학년",fatherName:"이준희",fatherPhone:"010-4557-4500",motherName:"고은정",motherPhone:"010-4454-7923",days:"주4회",weekday:"화수목금",paydate:null,method:"계",amount:null,note:null,sibGroup:"sib10",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st68",name:"이라율",grade:"2학년",fatherName:"이창수",fatherPhone:"010-4510-9917",motherName:"한진영",motherPhone:"010-3116-9004",days:"주4",weekday:"월화수목",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st69",name:"이민석",grade:"3학년",fatherName:"이형영",fatherPhone:"010-3352-9934",motherName:"김은미",motherPhone:"010-6714-2022",days:null,weekday:null,paydate:"2026-09-04",method:null,amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st70",name:"이상민",grade:"중학생",fatherName:"이영봉",fatherPhone:"010-2487-3537",motherName:"배수진",motherPhone:"010-2489-3537",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib11",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st71",name:"이상호",grade:"6학년",fatherName:"이영봉",fatherPhone:"010-2487-3537",motherName:"배수진",motherPhone:"010-2489-3537",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib11",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st72",name:"이상효",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-6550-8938",days:null,weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:"sib12",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st73",name:"이상훈",grade:"4학년",fatherName:"이철우",fatherPhone:"010-9698-3745",motherName:"양윤희",motherPhone:"010-6550-8938",days:"주4",weekday:"월수목금",paydate:"2026-09-09",method:"카",amount:300000,note:null,sibGroup:"sib12",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st74",name:"이시아",grade:"2학년",fatherName:"이동우",fatherPhone:"010-5091-9900",motherName:"김세희",motherPhone:"010-5092-9900",days:"주5",weekday:"월화수목금",paydate:"2026-09-04",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st75",name:"이아름",grade:"6학년",fatherName:"설금보",fatherPhone:"010-8501-0895",motherName:"이옥미",motherPhone:"010-4453-8189",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:"시범단",sibGroup:null,isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st76",name:"이유빈",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-5678-9523",days:null,weekday:null,paydate:"2026-09-08",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st77",name:"이주아",grade:"6학년",fatherName:"이원희",fatherPhone:"010-3712-5803",motherName:"송지영",motherPhone:"010-4406-8710",days:"주5",weekday:"월화수목금",paydate:"2026-09-01",method:"카",amount:190000,note:"시범단",sibGroup:null,isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st78",name:"이주호",grade:"2학년",fatherName:"이명수",fatherPhone:"010-5233-2395",motherName:"김예림",motherPhone:"010-3167-6404",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st79",name:"이준후",grade:"1학년",fatherName:"이철한",fatherPhone:"010-9082-6377",motherName:"소유나",motherPhone:"010-5478-1232",days:"주5",weekday:"월화수목금",paydate:"2026-09-03",method:null,amount:290000,note:null,sibGroup:"sib13",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st80",name:"이지우",grade:"4학년",fatherName:"이인학",fatherPhone:"010-7221-2508",motherName:"천선희",motherPhone:"010-2111-2508",days:"주5",weekday:"월화수목금",paydate:"2026-09-17",method:190000,amount:null,note:null,sibGroup:null,isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st81",name:"이지후",grade:"3학년",fatherName:"이철한",fatherPhone:"010-9082-6377",motherName:"소유나",motherPhone:"010-5478-1232",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib13",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st82",name:"이태양",grade:"3학년",fatherName:"이중혁",fatherPhone:"010-2107-3141",motherName:"문지숙",motherPhone:"010-2078-0949",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st83",name:"장수현",grade:"4학년",fatherName:"",fatherPhone:"",motherName:"한희정",motherPhone:"010-9076-0077",days:"주3",weekday:"화 수 금",paydate:"2026-09-08",method:"카",amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st84",name:"장연우",grade:"3학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-5177-2520",days:"주3회",weekday:"월수금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib14",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st85",name:"장원준",grade:"6학년",fatherName:"장태희",fatherPhone:"010-5270-6341",motherName:"윤화순",motherPhone:"010-8363-7573",days:"주5",weekday:"월화수목금",paydate:null,method:"계",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st86",name:"장윤우",grade:"5학년",fatherName:"장진석",fatherPhone:"010-5177-2530",motherName:"이정선",motherPhone:"010-5177-2520",days:"주3",weekday:"화목금",paydate:"2026-09-01",method:"카",amount:290000,note:null,sibGroup:"sib14",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st87",name:"정다현",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-8933-9064",days:null,weekday:null,paydate:null,method:null,amount:null,note:"시범단",sibGroup:"sib15",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st88",name:"정연아",grade:"유치부",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"",days:"주5회",weekday:null,paydate:null,method:null,amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"형제 관계 확인필요"},
+ {id:"st89",name:"정연우",grade:"2학년",fatherName:"정지은",fatherPhone:"010-4369-0990",motherName:"박미희",motherPhone:"010-5126-6835",days:"주5",weekday:"월화수목금",paydate:"2026-09-08",method:"카",amount:"완료",note:null,sibGroup:null,isDemoGuess:false,needsReview:true,reviewReason:"형제 관계 확인필요"},
+ {id:"st90",name:"정이도",grade:"2학년",fatherName:"",fatherPhone:"010-5698-8548",motherName:"",motherPhone:"010-7979-6761",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:160000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st91",name:"정지우",grade:"5학년",fatherName:"정석훈",fatherPhone:"010-9482-9145",motherName:"홍상숙",motherPhone:"010-8933-9064",days:"주5회",weekday:null,paydate:null,method:"카",amount:null,note:"시범단",sibGroup:"sib15",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st92",name:"조경찬",grade:"4학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-7702-8633",days:null,weekday:null,paydate:null,method:null,amount:"11월부터 계산",note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st93",name:"조예린",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-4509-6444",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st94",name:"조예준",grade:"2학년",fatherName:"조형준",fatherPhone:"010-2745-8088",motherName:"배수진",motherPhone:"010-9336-8724",days:null,weekday:null,paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st95",name:"주아준",grade:"4학년",fatherName:"주태호",fatherPhone:"010-3349-1695",motherName:"박정민",motherPhone:"010-6264-1695",days:"주4",weekday:"화수목금",paydate:"2026-09-08",method:"카",amount:185000,note:"시범단",sibGroup:null,isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st96",name:"지윤채",grade:"2학년",fatherName:"",fatherPhone:"",motherName:"",motherPhone:"010-3741-1020",days:null,weekday:null,paydate:"2026-09-01",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st97",name:"최다온",grade:"3학년",fatherName:"최석렬",fatherPhone:"010-8626-2254",motherName:"곽혜경",motherPhone:"010-5288-2444",days:"주5회",weekday:null,paydate:"2026-09-01",method:"카",amount:150000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st98",name:"최서은",grade:"2학년",fatherName:"촤병대",fatherPhone:"010-2644-0996",motherName:"김지해",motherPhone:"010-4616-3099",days:"주5회",weekday:"월화수목금",paydate:"2026-09-02",method:"카",amount:140000,note:"병결 3일차감완료",sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st99",name:"편소이",grade:"2학년",fatherName:"편재일",fatherPhone:"010-5605-9201",motherName:"김지혜",motherPhone:"010-3324-0182",days:null,weekday:null,paydate:"2026-09-15",method:null,amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st100",name:"표재영",grade:"6학년",fatherName:"표성원",fatherPhone:"010-6666-4645",motherName:"김경화",motherPhone:"010-4811-5166",days:"주5",weekday:"월화수목금",paydate:"2026-09-07",method:"카",amount:335000,note:"시범단",sibGroup:"sib16",isDemoGuess:true,needsReview:false,reviewReason:null},
+ {id:"st101",name:"표재원",grade:"4학년",fatherName:"표성원",fatherPhone:"010-6666-4645",motherName:"김경화",motherPhone:"010-4811-5166",days:"주5",weekday:"월화수목금",paydate:null,method:"카",amount:null,note:null,sibGroup:"sib16",isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st102",name:"허윤",grade:"2학년",fatherName:"허대민",fatherPhone:"010-6686-5792",motherName:"이보회",motherPhone:"010-6487-0524",days:"주5회",weekday:"주5회",paydate:"2026-09-02",method:"카",amount:155000,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+ {id:"st103",name:"홍시우",grade:"3학년",fatherName:"홍세화",fatherPhone:"010-4924-3989",motherName:"이채아",motherPhone:"010-6422-3989",days:"주5회",weekday:"주5회",paydate:null,method:"카",amount:null,note:null,sibGroup:null,isDemoGuess:false,needsReview:false,reviewReason:null},
+];
+
+const SEED_SIB_GROUP_NAMES = {"sib1": ["곽리온", "곽시연", "곽아인"], "sib2": ["김동준", "김동현"], "sib3": ["김서중", "김연중"], "sib4": ["류승우", "류시우"], "sib5": ["박건", "박윤"], "sib6": ["박소연", "박유민"], "sib7": ["양하온", "양하준"], "sib8": ["오하람", "오하율"], "sib9": ["육지호", "육지훈"], "sib10": ["이동윤", "이동율"], "sib11": ["이상민", "이상호"], "sib12": ["이상효", "이상훈"], "sib13": ["이준후", "이지후"], "sib14": ["장연우", "장윤우"], "sib15": ["정다현", "정지우"], "sib16": ["표재영", "표재원"]};
+
+/* ===================== 저장소 ===================== */
+const STUDENTS_KEY = 'tuition-students-v1';
+const GROUPS_KEY = 'tuition-groups-v1';
+const MONTH_PREFIX = 'tuition-month-v1-';
+const DEFAULT_MONTH = '2026-09';
+
+function loadJSON(key, fallback){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; }
+}
+
+/* ===================== 기본요금표 ===================== */
+// 도장 요금 기준 (엑셀 비고란 기준, 확인/수정 가능)
+const FEE_PRESETS = [
+  {type:'주4~5회', fee:160000},
+  {type:'주2~3회', fee:155000},
+  {type:'시범단', fee:null},
+  {type:'직접입력', fee:null},
+];
+
+function guessFeeType(days, weekday, isDemo){
+  if (isDemo) return '시범단';
+  const combo = (days||'') + (weekday||'');
+  if (combo.includes('시범단')) return '시범단';
+  if (/주[45]/.test(days||'')) return '주4~5회';
+  if (/주[23]/.test(days||'')) return '주2~3회';
+  const wd = weekday || '';
+  const dayCount = (wd.match(/[월화수목금]/g)||[]).length;
+  if (dayCount >= 4) return '주4~5회';
+  if (dayCount >= 2 && dayCount > 0) return '주2~3회';
+  return '미정';
+}
+function feeForType(type){
+  const p = FEE_PRESETS.find(f=>f.type===type);
+  return p ? p.fee : null;
+}
+
+/* ===================== 초기화 ===================== */
+let students = loadJSON(STUDENTS_KEY, null);
+if (!students){
+  students = SEED_STUDENTS.map(s => {
+    const feeType = guessFeeType(s.days, s.weekday, s.isDemoGuess);
+    return {
+      id: s.id, name: s.name, grade: s.grade,
+      fatherName: s.fatherName, fatherPhone: s.fatherPhone,
+      motherName: s.motherName, motherPhone: s.motherPhone,
+      days: s.days, weekday: s.weekday,
+      sibGroup: s.sibGroup || null,
+      isDemo: !!s.isDemoGuess,
+      feeType: feeType,
+      baseFee: feeForType(feeType),
+      needsReview: !!s.needsReview,
+      reviewReason: s.reviewReason || '',
+      reviewDone: false,
+    };
+  });
+  saveJSON(STUDENTS_KEY, students);
+}
+
+let groups = loadJSON(GROUPS_KEY, null);
+if (!groups){
+  groups = {};
+  Object.keys(SEED_SIB_GROUP_NAMES).forEach(gid => {
+    groups[gid] = { name: SEED_SIB_GROUP_NAMES[gid].join('·'), discountType:'amount', discountValue:0 };
+  });
+  saveJSON(GROUPS_KEY, groups);
+}
+
+function monthKey(m){ return MONTH_PREFIX + m; }
+function loadMonth(m){
+  let data = loadJSON(monthKey(m), null);
+  if (!data && m === DEFAULT_MONTH){
+    data = {};
+    SEED_STUDENTS.forEach(s => {
+      data[s.id] = {
+        paydate: s.paydate || '', method: s.method || '', amount: s.amount || null,
+        note: s.note || '', sickDays:0, travelDays:0, personalDays:0, deduction:0
+      };
+    });
+    saveJSON(monthKey(m), data);
+  }
+  if (!data) data = {};
+  return data;
+}
+function saveMonth(m, data){ saveJSON(monthKey(m), data); }
+
+let currentMonth = DEFAULT_MONTH;
+let reviewFilter = 'all'; // 'all' | 'needs'
+let monthData = loadMonth(currentMonth);
+
+/* ===================== 유틸 ===================== */
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function fmtMoney(n){
+  if (n === null || n === undefined || n === '') return '-';
+  return Number(n).toLocaleString('ko-KR') + '원';
+}
+function studentById(id){ return students.find(s=>s.id===id); }
+function persistStudents(){ saveJSON(STUDENTS_KEY, students); }
+function persistGroups(){ saveJSON(GROUPS_KEY, groups); }
+
+function suggestedAmount(stu, mrec){
+  if (!stu) return null;
+  let base = stu.baseFee;
+  if (base === null || base === undefined) return null;
+  let amt = base;
+  if (stu.sibGroup && groups[stu.sibGroup]){
+    const g = groups[stu.sibGroup];
+    if (g.discountType === 'percent') amt = amt - Math.round(amt * (g.discountValue||0) / 100);
+    else amt = amt - (g.discountValue||0);
+  }
+  if (mrec){
+    amt = amt - (mrec.deduction || 0);
+  }
+  return Math.max(amt, 0);
+}
+
+/* ===================== 탭 전환 ===================== */
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-'+tab));
+  render();
+}
+function render(){
+  const active = document.querySelector('.tab-btn.active').dataset.tab;
+  if (active === 'review') renderReview();
+  else if (active === 'month') renderMonth();
+  else if (active === 'unpaid') renderUnpaid();
+  else if (active === 'sibling') renderSibling();
+  else if (active === 'absence') renderAbsence();
+  updateTopSub();
+}
+function updateTopSub(){
+  const needReview = students.filter(s=>s.needsReview && !s.reviewDone).length;
+  const el = document.getElementById('topSub');
+  if (needReview > 0){
+    el.innerHTML = `원생 <b style="color:var(--accent)">${students.length}명</b> 중 <b style="color:var(--danger)">${needReview}명</b> 확인이 필요해요. '원생확인' 탭에서 확인해주세요.`;
+  } else {
+    el.textContent = `원생 ${students.length}명 · 모든 원생 확인 완료`;
+  }
+}
+
+
+/* ===================== 원생확인 탭 ===================== */
+let openIds = new Set();
+function toggleOpen(id){
+  if (openIds.has(id)) openIds.delete(id); else openIds.add(id);
+  renderReview();
+}
+function groupOptionsHtml(selected){
+  let html = `<option value="">형제그룹 없음</option>`;
+  Object.keys(groups).forEach(gid => {
+    html += `<option value="${gid}" ${selected===gid?'selected':''}>${groups[gid].name}</option>`;
+  });
+  html += `<option value="__new__">+ 새 그룹 만들기</option>`;
+  return html;
+}
+function feeTypeOptionsHtml(selected){
+  return FEE_PRESETS.map(f => `<option value="${f.type}" ${selected===f.type?'selected':''}>${f.type}${f.fee?` (${f.fee.toLocaleString()}원)`:''}</option>`).join('');
+}
+
+function renderReview(){
+  const panel = document.getElementById('panel-review');
+  const needReview = students.filter(s=>s.needsReview && !s.reviewDone);
+  const list = reviewFilter === 'needs' ? needReview : students.slice().sort((a,b)=>{
+    const ar = (a.needsReview && !a.reviewDone) ? 0 : 1;
+    const br = (b.needsReview && !b.reviewDone) ? 0 : 1;
+    if (ar !== br) return ar - br;
+    return a.name.localeCompare(b.name, 'ko');
+  });
+
+  let html = `
+    <div class="card">
+      <h2>원생 통합 확인</h2>
+      <div class="sub">출석부 원생목록과 수련비 명단을 대조했어요. 형제그룹·시범단·기본요금을 확인/수정해주세요.</div>
+      <div class="filter-chips">
+        <div class="chip ${reviewFilter==='all'?'active':''}" onclick="reviewFilter='all';renderReview();">전체 ${students.length}</div>
+        <div class="chip ${reviewFilter==='needs'?'active':''}" onclick="reviewFilter='needs';renderReview();">확인필요 ${needReview.length}</div>
+      </div>
+    </div>
+  `;
+
+  if (list.length === 0){
+    html += `<div class="empty-state">확인이 필요한 원생이 없어요 🎉</div>`;
+  }
+
+  list.forEach(s => {
+    const isOpen = openIds.has(s.id);
+    const badges = [];
+    if (s.needsReview && !s.reviewDone) badges.push(`<span class="badge warn">확인필요</span>`);
+    if (s.sibGroup && groups[s.sibGroup]) badges.push(`<span class="badge sib">형제:${groups[s.sibGroup].name}</span>`);
+    if (s.isDemo) badges.push(`<span class="badge demo">시범단</span>`);
+
+    html += `<div class="stu-row ${isOpen?'open':''} ${s.needsReview && !s.reviewDone?'review':''}">
+      <div class="stu-top" onclick="toggleOpen('${s.id}')" style="cursor:pointer;">
+        <div>
+          <div class="stu-name">${s.name} <span class="stu-sub">${s.grade||''}</span></div>
+          <div style="margin-top:4px;">${badges.join(' ')}</div>
+        </div>
+        <div class="chev">${isOpen?'▲':'▼'}</div>
+      </div>
+      <div class="stu-details">
+        ${s.needsReview && !s.reviewDone ? `<div class="badge warn" style="display:block;margin-bottom:8px;padding:8px 10px;">⚠ ${s.reviewReason || '확인이 필요합니다'}</div>` : ''}
+        <div class="field">
+          <label>학부모 연락처</label>
+          <div class="sub" style="margin:0;">아버지 ${s.fatherName||'-'} ${s.fatherPhone||''} / 어머니 ${s.motherName||'-'} ${s.motherPhone||''}</div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>형제그룹</label>
+            <select onchange="onSibGroupChange('${s.id}', this.value)">${groupOptionsHtml(s.sibGroup)}</select>
+          </div>
+          <div class="field" style="max-width:110px;flex:0 0 110px;">
+            <label>시범단</label>
+            <select onchange="onFieldChange('${s.id}','isDemo', this.value==='true')">
+              <option value="false" ${!s.isDemo?'selected':''}>아니오</option>
+              <option value="true" ${s.isDemo?'selected':''}>예</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>기본요금 구분</label>
+            <select onchange="onFeeTypeChange('${s.id}', this.value)">${feeTypeOptionsHtml(s.feeType)}</select>
+          </div>
+          <div class="field">
+            <label>기본요금(원)</label>
+            <input type="number" step="1000" value="${s.baseFee ?? ''}" onchange="onFieldChange('${s.id}','baseFee', this.value===''?null:Number(this.value))">
+          </div>
+        </div>
+        <div class="toolbar">
+          ${s.needsReview && !s.reviewDone ? `<button class="btn ok small" onclick="markReviewDone('${s.id}')">확인 완료</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  panel.innerHTML = html;
+}
+
+function onFieldChange(id, field, value){
+  const s = studentById(id); if (!s) return;
+  s[field] = value;
+  persistStudents();
+  renderReview();
+}
+function onFeeTypeChange(id, type){
+  const s = studentById(id); if (!s) return;
+  s.feeType = type;
+  const preset = feeForType(type);
+  if (preset !== null) s.baseFee = preset;
+  persistStudents();
+  renderReview();
+}
+function onSibGroupChange(id, val){
+  const s = studentById(id); if (!s) return;
+  if (val === '__new__'){
+    const name = prompt('새 형제그룹 이름 (예: 원생 이름들)');
+    if (!name){ renderReview(); return; }
+    const gid = 'sib_' + Date.now();
+    groups[gid] = { name: name, discountType:'amount', discountValue:0 };
+    persistGroups();
+    s.sibGroup = gid;
+  } else {
+    s.sibGroup = val || null;
+  }
+  persistStudents();
+  renderReview();
+}
+function markReviewDone(id){
+  const s = studentById(id); if (!s) return;
+  s.reviewDone = true;
+  persistStudents();
+  toast('확인 완료로 표시했어요');
+  renderReview();
+}
+
+/* ===================== 납부현황 탭 ===================== */
+function availableMonths(){
+  // localStorage에 있는 월 + 기본월 + 현재월 포함
+  const keys = Object.keys(localStorage).filter(k=>k.startsWith(MONTH_PREFIX)).map(k=>k.slice(MONTH_PREFIX.length));
+  if (!keys.includes(DEFAULT_MONTH)) keys.push(DEFAULT_MONTH);
+  if (!keys.includes(currentMonth)) keys.push(currentMonth);
+  return Array.from(new Set(keys)).sort();
+}
+function changeMonth(m){
+  currentMonth = m;
+  monthData = loadMonth(currentMonth);
+  render();
+}
+function addNewMonth(){
+  const m = prompt('새 월 (예: 2026-10)', nextMonthGuess());
+  if (!m) return;
+  if (!/^\d{4}-\d{2}$/.test(m)){ alert('YYYY-MM 형식으로 입력해주세요'); return; }
+  const carrySibling = confirm('원생 목록/형제그룹/기본요금은 그대로 이어받고, 납입일·금액·비고만 새로 입력합니다. 진행할까요?');
+  if (!carrySibling) return;
+  const data = {};
+  students.forEach(s => { data[s.id] = { paydate:'', method:'', amount:null, note:'', sickDays:0, travelDays:0, personalDays:0, deduction:0 }; });
+  saveMonth(m, data);
+  currentMonth = m;
+  monthData = data;
+  render();
+  toast(m + ' 월이 생성되었어요');
+}
+function nextMonthGuess(){
+  const [y,mo] = currentMonth.split('-').map(Number);
+  let ny=y, nm=mo+1;
+  if (nm>12){ nm=1; ny+=1; }
+  return ny + '-' + String(nm).padStart(2,'0');
+}
+
+function renderMonth(){
+  const panel = document.getElementById('panel-month');
+  const months = availableMonths();
+  const paidCount = students.filter(s => { const r = monthData[s.id]; return r && r.paydate; }).length;
+
+  let html = `
+    <div class="card">
+      <div class="row" style="align-items:flex-end;">
+        <div class="field" style="flex:2;">
+          <label>월 선택</label>
+          <select onchange="changeMonth(this.value)">
+            ${months.map(m=>`<option value="${m}" ${m===currentMonth?'selected':''}>${m}</option>`).join('')}
+          </select>
+        </div>
+        <button class="btn ghost small" onclick="addNewMonth()">+ 새 월 만들기</button>
+      </div>
+      <div class="summary" style="margin-top:10px;">
+        <div>원생 <b>${students.length}</b>명</div>
+        <div>납부 <b style="color:var(--ok)">${paidCount}</b>명</div>
+        <div>미납 <b style="color:var(--danger)">${students.length - paidCount}</b>명</div>
+      </div>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table class="month-table">
+        <thead><tr>
+          <th>번호</th><th>성명</th><th>구분</th><th>제안액</th><th>납입일</th><th>카/계</th><th>납입비</th><th>비고</th>
+        </tr></thead>
+        <tbody>
+  `;
+  students.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).forEach((s, i) => {
+    const r = monthData[s.id] || { paydate:'', method:'', amount:null, note:'' };
+    const sug = suggestedAmount(s, r);
+    const unpaid = !r.paydate;
+    html += `<tr class="${unpaid?'unpaid':''}">
+      <td>${i+1}</td>
+      <td style="text-align:left;">${s.name}${s.sibGroup?' <span style="color:var(--blue);">👪</span>':''}${s.isDemo?' <span style="color:var(--accent);">★</span>':''}</td>
+      <td>${s.feeType||'-'}</td>
+      <td>${fmtMoney(sug)}</td>
+      <td><input type="date" value="${r.paydate||''}" onchange="onMonthFieldChange('${s.id}','paydate',this.value)"></td>
+      <td>
+        <select onchange="onMonthFieldChange('${s.id}','method',this.value)">
+          <option value="" ${!r.method?'selected':''}>-</option>
+          <option value="카" ${r.method==='카'?'selected':''}>카드</option>
+          <option value="계" ${r.method==='계'?'selected':''}>계좌</option>
+          <option value="현금" ${r.method==='현금'?'selected':''}>현금</option>
+        </select>
+      </td>
+      <td><input type="number" style="width:74px;" value="${r.amount ?? ''}" placeholder="${sug ?? ''}" onchange="onMonthFieldChange('${s.id}','amount',this.value===''?null:Number(this.value))"></td>
+      <td><input type="text" style="width:90px;" value="${r.note||''}" onchange="onMonthFieldChange('${s.id}','note',this.value)"></td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+  panel.innerHTML = html;
+}
+function onMonthFieldChange(id, field, value){
+  if (!monthData[id]) monthData[id] = { paydate:'', method:'', amount:null, note:'', sickDays:0, travelDays:0, personalDays:0, deduction:0 };
+  monthData[id][field] = value;
+  saveMonth(currentMonth, monthData);
+  renderMonth();
+}
+
+/* ===================== 미납확인 탭 ===================== */
+function renderUnpaid(){
+  const panel = document.getElementById('panel-unpaid');
+  const unpaid = students.filter(s => { const r = monthData[s.id]; return !r || !r.paydate; })
+    .sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+
+  let html = `<div class="card">
+    <h2>${currentMonth} 미납 원생</h2>
+    <div class="sub">납입일이 비어있는 원생이에요. 다른 달을 보려면 '납부현황' 탭에서 월을 바꿔주세요.</div>
+    <div class="summary"><div>총 <b style="color:var(--danger)">${unpaid.length}</b>명</div></div>
+  </div>`;
+
+  if (unpaid.length === 0){
+    html += `<div class="empty-state">이번 달 미납 원생이 없어요 🎉</div>`;
+  }
+  unpaid.forEach(s => {
+    const sug = suggestedAmount(s, monthData[s.id]);
+    html += `<div class="stu-row">
+      <div class="stu-top">
+        <div>
+          <div class="stu-name">${s.name} <span class="stu-sub">${s.grade||''}</span></div>
+          <div class="stu-sub" style="margin-top:4px;">제안액 ${fmtMoney(sug)} · ${s.feeType||'-'}</div>
+          <div class="stu-sub" style="margin-top:2px;">아버지 ${s.fatherPhone||'-'} / 어머니 ${s.motherPhone||'-'}</div>
+        </div>
+      </div>
+    </div>`;
+  });
+  panel.innerHTML = html;
+}
+
+/* ===================== 형제관리 탭 ===================== */
+function renderSibling(){
+  const panel = document.getElementById('panel-sibling');
+  let html = `<div class="card">
+    <h2>형제자매 할인 관리</h2>
+    <div class="sub">그룹별로 할인을 한 번 설정하면 소속 원생 전원의 제안액에 자동 반영돼요.</div>
+  </div>`;
+
+  const gids = Object.keys(groups);
+  if (gids.length === 0){
+    html += `<div class="empty-state">등록된 형제그룹이 없어요. '원생확인' 탭에서 원생별로 그룹을 지정해주세요.</div>`;
+  }
+  gids.forEach(gid => {
+    const g = groups[gid];
+    const members = students.filter(s=>s.sibGroup===gid);
+    if (members.length === 0) return;
+    html += `<div class="card group-card">
+      <div class="row" style="align-items:flex-end;">
+        <div class="field" style="flex:2;">
+          <label>그룹 이름</label>
+          <input type="text" value="${g.name}" onchange="onGroupFieldChange('${gid}','name',this.value)">
+        </div>
+      </div>
+      <div class="group-members">구성원: ${members.map(m=>m.name).join(', ')} (${members.length}명)</div>
+      <div class="row">
+        <div class="field">
+          <label>할인 방식</label>
+          <select onchange="onGroupFieldChange('${gid}','discountType',this.value)">
+            <option value="amount" ${g.discountType==='amount'?'selected':''}>정액 할인(원)</option>
+            <option value="percent" ${g.discountType==='percent'?'selected':''}>정률 할인(%)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>할인값</label>
+          <input type="number" value="${g.discountValue||0}" onchange="onGroupFieldChange('${gid}','discountValue',Number(this.value))">
+        </div>
+      </div>
+    </div>`;
+  });
+  panel.innerHTML = html;
+}
+function onGroupFieldChange(gid, field, value){
+  groups[gid][field] = value;
+  persistGroups();
+  renderSibling();
+}
+
+/* ===================== 결석차감 탭 ===================== */
+let absenceSearch = '';
+function renderAbsence(){
+  const panel = document.getElementById('panel-absence');
+  let html = `<div class="card">
+    <h2>결석 차감 계산기 (${currentMonth})</h2>
+    <div class="sub">병결 최대 10일, 여행 최대 5일까지 1일당 5,000원 차감돼요. 개인사유 결석은 차감되지 않아요(한도 초과분도 동일).</div>
+    <input type="search" class="search-box" placeholder="이름 검색" value="${absenceSearch}" oninput="absenceSearch=this.value;renderAbsence();">
+  </div>`;
+
+  const list = students.filter(s => !absenceSearch || s.name.includes(absenceSearch))
+    .sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+
+  list.forEach(s => {
+    const r = monthData[s.id] || { sickDays:0, travelDays:0, personalDays:0, deduction:0 };
+    html += `<div class="stu-row">
+      <div class="stu-top"><div class="stu-name">${s.name}</div></div>
+      <div class="stu-details" style="display:block;">
+        <div class="row">
+          <div class="field">
+            <label>병결일수 (최대10)</label>
+            <input type="number" min="0" max="30" value="${r.sickDays||0}" onchange="onAbsenceChange('${s.id}','sickDays',this.value)">
+          </div>
+          <div class="field">
+            <label>여행일수 (최대5)</label>
+            <input type="number" min="0" max="30" value="${r.travelDays||0}" onchange="onAbsenceChange('${s.id}','travelDays',this.value)">
+          </div>
+          <div class="field">
+            <label>개인사유(차감x)</label>
+            <input type="number" min="0" max="30" value="${r.personalDays||0}" onchange="onAbsenceChange('${s.id}','personalDays',this.value)">
+          </div>
+        </div>
+        <div class="sub" style="margin:4px 0 0;">차감액: <b style="color:var(--danger)">${fmtMoney(r.deduction||0)}</b> → 이번달 제안액 ${fmtMoney(suggestedAmount(s,r))}</div>
+      </div>
+    </div>`;
+  });
+  panel.innerHTML = html;
+}
+function onAbsenceChange(id, field, value){
+  if (!monthData[id]) monthData[id] = { paydate:'', method:'', amount:null, note:'', sickDays:0, travelDays:0, personalDays:0, deduction:0 };
+  const r = monthData[id];
+  r[field] = Number(value) || 0;
+  const sick = Math.min(r.sickDays||0, 10);
+  const travel = Math.min(r.travelDays||0, 5);
+  r.deduction = (sick + travel) * 5000;
+  saveMonth(currentMonth, monthData);
+  renderAbsence();
+}
+
+/* ===================== 시작 ===================== */
+render();
+
+</script>
+</body>
+</html>
